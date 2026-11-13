@@ -1,0 +1,248 @@
+{
+  "entities": {
+    "ServiceRequest": {
+      "title": "ServiceRequest",
+      "description": "A home maintenance service request submitted by a customer in Borg El Arab, Alexandria.",
+      "type": "object",
+      "properties": {
+        "requestCode": {
+          "type": "string",
+          "description": "Human-readable unique order reference code.",
+          "minLength": 3,
+          "maxLength": 20,
+          "pattern": "^MS-[A-Z0-9]{4,12}$"
+        },
+        "serviceType": {
+          "type": "string",
+          "description": "Maintenance service category.",
+          "enum": ["electrical", "plumbing", "painting", "hvac"]
+        },
+        "description": {
+          "type": "string",
+          "description": "Detailed description of the issue or fault.",
+          "minLength": 10,
+          "maxLength": 2000
+        },
+        "phone": {
+          "type": "string",
+          "description": "Customer contact phone number.",
+          "minLength": 8,
+          "maxLength": 20
+        },
+        "district": {
+          "type": "string",
+          "description": "Borg El Arab district or neighborhood.",
+          "minLength": 2,
+          "maxLength": 100
+        },
+        "address": {
+          "type": "string",
+          "description": "Detailed street, building, and apartment address in Borg El Arab.",
+          "minLength": 5,
+          "maxLength": 400
+        },
+        "locationLat": {
+          "type": "number",
+          "description": "Optional GPS latitude captured from client device."
+        },
+        "locationLng": {
+          "type": "number",
+          "description": "Optional GPS longitude captured from client device."
+        },
+        "locationUrl": {
+          "type": "string",
+          "description": "Optional Google Maps URL for the customer location.",
+          "maxLength": 300
+        },
+        "photoUrls": {
+          "type": "array",
+          "description": "Legacy external photo URLs array (empty for subcollection uploads)."
+        },
+        "photoCount": {
+          "type": "integer",
+          "description": "Number of compressed photos stored in the photos subcollection (0 to 4)."
+        },
+        "status": {
+          "type": "string",
+          "description": "Current workflow status managed by admin.",
+          "enum": ["new", "reviewing", "assigned", "completed", "cancelled"]
+        },
+        "assignedTechnicianId": {
+          "type": "string",
+          "description": "Document ID of the assigned technician (admin only).",
+          "maxLength": 128
+        },
+        "assignedTechnicianName": {
+          "type": "string",
+          "description": "Name of the assigned technician (admin only).",
+          "maxLength": 120
+        },
+        "assignedTechnicianPhone": {
+          "type": "string",
+          "description": "Phone of the assigned technician (admin only).",
+          "maxLength": 30
+        },
+        "adminNotes": {
+          "type": "string",
+          "description": "Internal administrative notes (admin only).",
+          "maxLength": 2000
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server creation timestamp."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server last-updated timestamp."
+        }
+      },
+      "required": [
+        "requestCode",
+        "serviceType",
+        "description",
+        "phone",
+        "district",
+        "address",
+        "photoUrls",
+        "status",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "RequestPhoto": {
+      "title": "RequestPhoto",
+      "description": "Compressed JPEG or WebP fault photo stored atomically in the request subcollection for admin-only viewing.",
+      "type": "object",
+      "properties": {
+        "index": {
+          "type": "integer",
+          "description": "Zero-based photo order index (0 to 3)."
+        },
+        "dataUrl": {
+          "type": "string",
+          "description": "Base64 compressed JPEG or WebP data URL.",
+          "minLength": 50,
+          "maxLength": 210000,
+          "pattern": "^data:image/(jpeg|webp);base64,[A-Za-z0-9+/=]+$"
+        },
+        "mimeType": {
+          "type": "string",
+          "description": "Compressed image MIME type.",
+          "enum": ["image/jpeg", "image/webp"]
+        },
+        "width": {
+          "type": "integer",
+          "description": "Compressed image width in pixels (1 to 900)."
+        },
+        "height": {
+          "type": "integer",
+          "description": "Compressed image height in pixels (1 to 900)."
+        },
+        "sizeBytes": {
+          "type": "integer",
+          "description": "Exact character length of dataUrl."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server creation timestamp."
+        }
+      },
+      "required": ["index", "dataUrl", "mimeType", "width", "height", "sizeBytes", "createdAt"]
+    },
+    "Technician": {
+      "title": "Technician",
+      "description": "Internal technician roster managed and viewed exclusively by the admin.",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Technician full name.",
+          "minLength": 2,
+          "maxLength": 120
+        },
+        "phone": {
+          "type": "string",
+          "description": "Technician mobile phone number.",
+          "minLength": 8,
+          "maxLength": 25
+        },
+        "specialty": {
+          "type": "string",
+          "description": "Primary maintenance specialty.",
+          "enum": ["electrical", "plumbing", "painting", "hvac", "general"]
+        },
+        "active": {
+          "type": "boolean",
+          "description": "Whether the technician is available for assignment."
+        },
+        "notes": {
+          "type": "string",
+          "description": "Internal notes about technician availability or skills.",
+          "maxLength": 500
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["name", "phone", "specialty", "active", "createdAt", "updatedAt"]
+    },
+    "AdminUser": {
+      "title": "AdminUser",
+      "description": "Authorized application administrator record.",
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "name": {
+          "type": "string",
+          "maxLength": 120
+        },
+        "role": {
+          "type": "string",
+          "enum": ["admin"]
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["email", "role", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/service_requests/{requestId}": {
+      "schema": {
+        "$ref": "#/entities/ServiceRequest"
+      },
+      "description": "Customer maintenance requests; write-only for public submission, full read/write for admin only."
+    },
+    "/service_requests/{requestId}/photos/{photoId}": {
+      "schema": {
+        "$ref": "#/entities/RequestPhoto"
+      },
+      "description": "Compressed fault photos written atomically with parent request; read and delete restricted strictly to admin."
+    },
+    "/technicians/{technicianId}": {
+      "schema": {
+        "$ref": "#/entities/Technician"
+      },
+      "description": "Private technician roster accessible exclusively by admin."
+    },
+    "/admins/{adminId}": {
+      "schema": {
+        "$ref": "#/entities/AdminUser"
+      },
+      "description": "Authorized administrator UIDs."
+    }
+  }
+}

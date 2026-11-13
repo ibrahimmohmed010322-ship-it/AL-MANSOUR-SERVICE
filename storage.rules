@@ -1,0 +1,27 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /request_photos/{requestId}/{fileName} {
+      // Allow customers to upload problem images (max 5MB, image/* only)
+      allow create: if requestId.size() <= 128 &&
+        requestId.matches('^[a-zA-Z0-9_\\-]+$') &&
+        request.resource.size <= 5 * 1024 * 1024 &&
+        request.resource.contentType.matches('image/.*');
+
+      // Allow get for unguessable object path so getDownloadURL() succeeds after upload;
+      // disallow listing so no customer can browse uploaded files.
+      allow get: if true;
+      allow list: if false;
+
+      // Only authenticated admins can delete stored photos
+      allow delete: if request.auth != null && (
+        firestore.exists(/databases/ai-studio-d891641a-71f9-4ef6-b105-2114f288afb5/documents/admins/$(request.auth.uid)) ||
+        (request.auth.token.email == 'ibrahimmohmed010322@gmail.com' && request.auth.token.email_verified == true)
+      );
+    }
+
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

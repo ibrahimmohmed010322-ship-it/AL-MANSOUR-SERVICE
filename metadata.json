@@ -1,0 +1,6 @@
+{
+  "name": "AL MANSOUR SERVICES – خدمات المنصور",
+  "description": "منصة خدمات الصيانة المنزلية المتكاملة في برج العرب بالإسكندرية: كهرباء، سباكة، نقاشة، وتكييف.",
+  "requestFramePermissions": ["geolocation"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,176 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global default-deny safety net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && (
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid)) ||
+        (request.auth.token.email == 'ibrahimmohmed010322@gmail.com' && request.auth.token.email_verified == true)
+      );
+    }
+
+    function isValidServiceRequestFields(data) {
+      return data.requestCode is string && data.requestCode.size() >= 3 && data.requestCode.size() <= 20 &&
+        data.requestCode.matches('^MS-[A-Z0-9]{4,12}$') &&
+        data.serviceType in ['electrical', 'plumbing', 'painting', 'hvac'] &&
+        data.description is string && data.description.size() >= 10 && data.description.size() <= 2000 &&
+        data.phone is string && data.phone.size() >= 8 && data.phone.size() <= 20 &&
+        data.district is string && data.district.size() >= 2 && data.district.size() <= 100 &&
+        data.address is string && data.address.size() >= 5 && data.address.size() <= 400 &&
+        (!('locationLat' in data) || data.locationLat is number) &&
+        (!('locationLng' in data) || data.locationLng is number) &&
+        (!('locationUrl' in data) || (data.locationUrl is string && data.locationUrl.size() <= 300)) &&
+        data.photoUrls is list && data.photoUrls.size() <= 4 &&
+        (data.photoUrls.size() == 0 || (data.photoUrls[0] is string && data.photoUrls[0].size() <= 1000)) &&
+        (!('photoCount' in data) || (data.photoCount is int && data.photoCount >= 0 && data.photoCount <= 4)) &&
+        data.status in ['new', 'reviewing', 'assigned', 'completed', 'cancelled'];
+    }
+
+    function isValidServiceRequestCreate(data) {
+      return data.keys().hasAll(['requestCode', 'serviceType', 'description', 'phone', 'district', 'address', 'photoUrls', 'photoCount', 'status', 'createdAt', 'updatedAt']) &&
+        data.keys().hasOnly(['requestCode', 'serviceType', 'description', 'phone', 'district', 'address', 'locationLat', 'locationLng', 'locationUrl', 'photoUrls', 'photoCount', 'status', 'createdAt', 'updatedAt']) &&
+        isValidServiceRequestFields(data) &&
+        data.photoCount is int && data.photoCount >= 0 && data.photoCount <= 4 &&
+        data.photoUrls.size() == 0 &&
+        data.status == 'new' &&
+        data.createdAt == request.time &&
+        data.updatedAt == request.time;
+    }
+
+    function isValidServiceRequestUpdate(data) {
+      return data.keys().hasAll(['requestCode', 'serviceType', 'description', 'phone', 'district', 'address', 'photoUrls', 'status', 'createdAt', 'updatedAt']) &&
+        data.keys().hasOnly(['requestCode', 'serviceType', 'description', 'phone', 'district', 'address', 'locationLat', 'locationLng', 'locationUrl', 'photoUrls', 'photoCount', 'status', 'assignedTechnicianId', 'assignedTechnicianName', 'assignedTechnicianPhone', 'adminNotes', 'createdAt', 'updatedAt']) &&
+        isValidServiceRequestFields(data) &&
+        (!('assignedTechnicianId' in data) || (data.assignedTechnicianId is string && data.assignedTechnicianId.size() <= 128)) &&
+        (!('assignedTechnicianName' in data) || (data.assignedTechnicianName is string && data.assignedTechnicianName.size() <= 120)) &&
+        (!('assignedTechnicianPhone' in data) || (data.assignedTechnicianPhone is string && data.assignedTechnicianPhone.size() <= 30)) &&
+        (!('adminNotes' in data) || (data.adminNotes is string && data.adminNotes.size() <= 2000)) &&
+        data.requestCode == existing().requestCode &&
+        data.createdAt == existing().createdAt &&
+        data.updatedAt == request.time;
+    }
+
+    function isValidRequestPhoto(data, photoId) {
+      return data.keys().hasAll(['index', 'dataUrl', 'mimeType', 'width', 'height', 'sizeBytes', 'createdAt']) &&
+        data.keys().hasOnly(['index', 'dataUrl', 'mimeType', 'width', 'height', 'sizeBytes', 'createdAt']) &&
+        data.index is int && data.index >= 0 && data.index <= 3 &&
+        (
+          (photoId == 'photo_0' && data.index == 0) ||
+          (photoId == 'photo_1' && data.index == 1) ||
+          (photoId == 'photo_2' && data.index == 2) ||
+          (photoId == 'photo_3' && data.index == 3)
+        ) &&
+        data.mimeType in ['image/jpeg', 'image/webp'] &&
+        data.width is int && data.width >= 1 && data.width <= 900 &&
+        data.height is int && data.height >= 1 && data.height <= 900 &&
+        data.dataUrl is string &&
+        data.dataUrl.size() >= 50 && data.dataUrl.size() <= 210000 &&
+        (
+          (data.mimeType == 'image/jpeg' && data.dataUrl[0:23] == 'data:image/jpeg;base64,') ||
+          (data.mimeType == 'image/webp' && data.dataUrl[0:23] == 'data:image/webp;base64,')
+        ) &&
+        data.sizeBytes is int && data.sizeBytes == data.dataUrl.size() &&
+        data.createdAt == request.time;
+    }
+
+    function isValidTechnician(data) {
+      return data.keys().hasAll(['name', 'phone', 'specialty', 'active', 'createdAt', 'updatedAt']) &&
+        data.keys().hasOnly(['name', 'phone', 'specialty', 'active', 'notes', 'createdAt', 'updatedAt']) &&
+        data.name is string && data.name.size() >= 2 && data.name.size() <= 120 &&
+        data.phone is string && data.phone.size() >= 8 && data.phone.size() <= 25 &&
+        data.specialty in ['electrical', 'plumbing', 'painting', 'hvac', 'general'] &&
+        data.active is bool &&
+        (!('notes' in data) || (data.notes is string && data.notes.size() <= 500)) &&
+        data.updatedAt == request.time;
+    }
+
+    // Customer service requests:
+    // - Public customers can ONLY create a new request (status: 'new'), never read/list/update/delete.
+    // - Admin can read, list, update status/technician/notes, and delete.
+    match /service_requests/{requestId} {
+      allow get: if isAdmin() && isValidId(requestId);
+      allow list: if isAdmin();
+      allow create: if isValidId(requestId) && isValidServiceRequestCreate(incoming());
+      allow update: if isAdmin() && isValidId(requestId) &&
+        isValidServiceRequestUpdate(incoming()) &&
+        incoming().diff(existing()).affectedKeys().hasOnly([
+          'status',
+          'assignedTechnicianId',
+          'assignedTechnicianName',
+          'assignedTechnicianPhone',
+          'adminNotes',
+          'updatedAt'
+        ]);
+      allow delete: if isAdmin() && isValidId(requestId);
+
+      // Compressed fault photos subcollection:
+      // - Created ONLY atomically inside the exact same writeBatch that creates the parent request.
+      // - !exists(parent) guarantees photos can NEVER be attached to any existing request (no time-window bypass).
+      // - existsAfter(parent) + getAfter(parent) guarantees photos cannot be orphaned on non-existent requests.
+      // - Read, list, and delete are restricted exclusively to verified Admin.
+      match /photos/{photoId} {
+        allow get: if isAdmin() && isValidId(requestId) && isValidId(photoId);
+        allow list: if isAdmin() && isValidId(requestId);
+        allow update: if false;
+        allow delete: if isAdmin() && isValidId(requestId) && isValidId(photoId);
+        allow create: if isValidId(requestId) &&
+          photoId in ['photo_0', 'photo_1', 'photo_2', 'photo_3'] &&
+          isValidRequestPhoto(incoming(), photoId) &&
+          !exists(/databases/$(database)/documents/service_requests/$(requestId)) &&
+          existsAfter(/databases/$(database)/documents/service_requests/$(requestId)) &&
+          getAfter(/databases/$(database)/documents/service_requests/$(requestId)).data.status == 'new' &&
+          getAfter(/databases/$(database)/documents/service_requests/$(requestId)).data.createdAt == request.time &&
+          getAfter(/databases/$(database)/documents/service_requests/$(requestId)).data.photoCount is int &&
+          incoming().index < getAfter(/databases/$(database)/documents/service_requests/$(requestId)).data.photoCount;
+      }
+    }
+
+    // Technicians roster: strictly admin-only. Customers cannot read names, phones, or counts.
+    match /technicians/{technicianId} {
+      allow get: if isAdmin() && isValidId(technicianId);
+      allow list: if isAdmin();
+      allow create: if isAdmin() && isValidId(technicianId) &&
+        isValidTechnician(incoming()) &&
+        incoming().createdAt == request.time;
+      allow update: if isAdmin() && isValidId(technicianId) &&
+        isValidTechnician(incoming()) &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().diff(existing()).affectedKeys().hasOnly([
+          'name',
+          'phone',
+          'specialty',
+          'active',
+          'notes',
+          'updatedAt'
+        ]);
+      allow delete: if isAdmin() && isValidId(technicianId);
+    }
+
+    // Admin registry: read own admin status only; managed via Firebase Console / Admin SDK.
+    match /admins/{adminId} {
+      allow get: if isSignedIn() && isValidId(adminId) && (request.auth.uid == adminId || isAdmin());
+      allow list, create, update, delete: if false;
+    }
+  }
+}
