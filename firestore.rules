@@ -33,7 +33,7 @@ service cloud.firestore {
     function isValidServiceRequestFields(data) {
       return data.requestCode is string && data.requestCode.size() >= 3 && data.requestCode.size() <= 20 &&
         data.requestCode.matches('^MS-[A-Z0-9]{4,12}$') &&
-        data.serviceType in ['electrical', 'plumbing', 'painting', 'hvac'] &&
+        data.serviceType in ['electrical', 'plumbing', 'painting', 'hvac', 'masonry', 'ceramics', 'marble', 'plastering', 'gypsum'] &&
         data.description is string && data.description.size() >= 10 && data.description.size() <= 2000 &&
         data.phone is string && data.phone.size() >= 8 && data.phone.size() <= 20 &&
         data.district is string && data.district.size() >= 2 && data.district.size() <= 100 &&
@@ -99,7 +99,7 @@ service cloud.firestore {
         data.keys().hasOnly(['name', 'phone', 'specialty', 'active', 'notes', 'createdAt', 'updatedAt']) &&
         data.name is string && data.name.size() >= 2 && data.name.size() <= 120 &&
         data.phone is string && data.phone.size() >= 8 && data.phone.size() <= 25 &&
-        data.specialty in ['electrical', 'plumbing', 'painting', 'hvac', 'general'] &&
+        data.specialty in ['electrical', 'plumbing', 'painting', 'hvac', 'masonry', 'ceramics', 'marble', 'plastering', 'gypsum', 'general'] &&
         data.active is bool &&
         (!('notes' in data) || (data.notes is string && data.notes.size() <= 500)) &&
         data.updatedAt == request.time;

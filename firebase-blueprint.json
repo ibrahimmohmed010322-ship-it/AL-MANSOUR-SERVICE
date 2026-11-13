@@ -15,7 +15,17 @@
         "serviceType": {
           "type": "string",
           "description": "Maintenance service category.",
-          "enum": ["electrical", "plumbing", "painting", "hvac"]
+          "enum": [
+            "electrical",
+            "plumbing",
+            "painting",
+            "hvac",
+            "masonry",
+            "ceramics",
+            "marble",
+            "plastering",
+            "gypsum"
+          ]
         },
         "description": {
           "type": "string",
@@ -172,7 +182,18 @@
         "specialty": {
           "type": "string",
           "description": "Primary maintenance specialty.",
-          "enum": ["electrical", "plumbing", "painting", "hvac", "general"]
+          "enum": [
+            "electrical",
+            "plumbing",
+            "painting",
+            "hvac",
+            "masonry",
+            "ceramics",
+            "marble",
+            "plastering",
+            "gypsum",
+            "general"
+          ]
         },
         "active": {
           "type": "boolean",

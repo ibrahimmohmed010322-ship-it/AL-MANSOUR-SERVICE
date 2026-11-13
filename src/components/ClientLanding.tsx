@@ -1,7 +1,12 @@
 import {
   AirVent,
   ArrowDownLeft,
+  BrickWall,
+  Columns3,
   Droplets,
+  Hammer,
+  Layers,
+  LayoutGrid,
   MapPin,
   PaintRoller,
   ShieldCheck,
@@ -26,6 +31,11 @@ const SERVICE_ICONS: Record<ServiceType, typeof Zap> = {
   plumbing: Droplets,
   painting: PaintRoller,
   hvac: AirVent,
+  masonry: BrickWall,
+  ceramics: LayoutGrid,
+  marble: Layers,
+  plastering: Hammer,
+  gypsum: Columns3,
 };
 
 export function ClientLanding({
@@ -144,7 +154,7 @@ export function ClientLanding({
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {SERVICE_CATEGORIES.map((service) => {
             const Icon = SERVICE_ICONS[service.id];
             const isSelected = selectedService === service.id;

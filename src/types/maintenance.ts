@@ -3,8 +3,22 @@ import electricalImg from '../assets/images/service_electrical_1794562084775.jpg
 import plumbingImg from '../assets/images/service_plumbing_1794562085132.jpg';
 import paintingImg from '../assets/images/service_painting_1794562086107.jpg';
 import hvacImg from '../assets/images/service_hvac_1794562086089.jpg';
+import masonryImg from '../assets/images/service_masonry_1794593670581.jpg';
+import ceramicsImg from '../assets/images/service_ceramics_1794593670916.jpg';
+import marbleImg from '../assets/images/service_marble_1794593670291.jpg';
+import plasteringImg from '../assets/images/service_plastering_1794593671663.jpg';
+import gypsumImg from '../assets/images/service_gypsum_1794593672597.jpg';
 
-export type ServiceType = 'electrical' | 'plumbing' | 'painting' | 'hvac';
+export type ServiceType =
+  | 'electrical'
+  | 'plumbing'
+  | 'painting'
+  | 'hvac'
+  | 'masonry'
+  | 'ceramics'
+  | 'marble'
+  | 'plastering'
+  | 'gypsum';
 
 export type RequestStatus =
   | 'new'
@@ -103,6 +117,46 @@ export const SERVICE_CATEGORIES: ServiceCategoryInfo[] = [
     examples: ['ضعف التبريد أو توقفه', 'تنظيف وغسيل الوحدات', 'شحن فريون وفحص تسريب'],
     image: hvacImg,
   },
+  {
+    id: 'masonry',
+    number: '05',
+    title: 'أعمال البناء',
+    subtitle: 'بناء قواطيع طوب وبلوك، تعديلات معمارية، وترميم المباني والأسوار',
+    examples: ['بناء حوائط وتعديلات داخلية', 'ترميم فتحات الأبواب والشبابيك', 'أعمال أسمنتية وترميمات'],
+    image: masonryImg,
+  },
+  {
+    id: 'ceramics',
+    number: '06',
+    title: 'تركيب السيراميك والبورسلين',
+    subtitle: 'تركيب أرضيات وحوائط بدقة الليزر، استبدال البلاط التالف، وسقية الفواصل',
+    examples: ['تركيب بورسلين وسيراميك جديد', 'تغيير بلاطات مكسورة أو مخلوعة', 'تجديد سيراميك المطابخ والحمامات'],
+    image: ceramicsImg,
+  },
+  {
+    id: 'marble',
+    number: '07',
+    title: 'أعمال الرخام',
+    subtitle: 'تركيب وجلي وتلميع الرخام والجرانيت للدرج، المداخل، وكونترات المطابخ',
+    examples: ['تركيب رخام مطابخ وأحواض', 'معالجة الشروخ وجلي وتلميع الرخام', 'تجديد درجات السلم والمداخل'],
+    image: marbleImg,
+  },
+  {
+    id: 'plastering',
+    number: '08',
+    title: 'المحارة واللياسة',
+    subtitle: 'محارة داخلية وخارجية بميزان مستقيم، تأسيس الحوائط، ومعالجة التطبيع',
+    examples: ['محارة وتأسيس حوائط جديدة', 'إصلاح تساقط أو تنميل المحارة', 'ضبط الزوايا والأسقف للدهان'],
+    image: plasteringImg,
+  },
+  {
+    id: 'gypsum',
+    number: '09',
+    title: 'الجبس والديكورات',
+    subtitle: 'أسقف جبس بورد معلقة، بيوت نور، مكتبات شاشات، وديكورات حديثة',
+    examples: ['تصميم وتركيب أسقف جبس بورد', 'تجهيز بيوت الإضاءة المخفية', 'صيانة وإصلاح ألواح الجبس التالفة'],
+    image: gypsumImg,
+  },
 ];
 
 export const BORG_EL_ARAB_DISTRICTS: string[] = [
@@ -127,6 +181,11 @@ export const SERVICE_LABELS: Record<ServiceType, string> = {
   plumbing: 'سباكة',
   painting: 'نقاشة',
   hvac: 'تكييف',
+  masonry: 'أعمال البناء',
+  ceramics: 'تركيب السيراميك والبورسلين',
+  marble: 'أعمال الرخام',
+  plastering: 'المحارة واللياسة',
+  gypsum: 'الجبس والديكورات',
 };
 
 export const SPECIALTY_LABELS: Record<TechnicianSpecialty, string> = {
@@ -134,6 +193,11 @@ export const SPECIALTY_LABELS: Record<TechnicianSpecialty, string> = {
   plumbing: 'سباكة',
   painting: 'نقاشة',
   hvac: 'تكييف',
+  masonry: 'أعمال البناء',
+  ceramics: 'تركيب السيراميك والبورسلين',
+  marble: 'أعمال الرخام',
+  plastering: 'المحارة واللياسة',
+  gypsum: 'الجبس والديكورات',
   general: 'صيانة عامة',
 };
 

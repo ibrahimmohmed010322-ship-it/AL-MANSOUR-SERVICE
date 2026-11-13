@@ -1,9 +1,14 @@
 import {
   AirVent,
   AlertCircle,
+  BrickWall,
   Camera,
   CheckCircle2,
+  Columns3,
   Droplets,
+  Hammer,
+  Layers,
+  LayoutGrid,
   Loader2,
   LocateFixed,
   MapPin,
@@ -38,6 +43,11 @@ const SERVICE_ICONS: Record<ServiceType, typeof Zap> = {
   plumbing: Droplets,
   painting: PaintRoller,
   hvac: AirVent,
+  masonry: BrickWall,
+  ceramics: LayoutGrid,
+  marble: Layers,
+  plastering: Hammer,
+  gypsum: Columns3,
 };
 
 export function ServiceRequestForm({
@@ -323,7 +333,7 @@ export function ServiceRequestForm({
             <legend className="text-sm font-bold text-[#0B0B0C]">
               1. اختر نوع الخدمة المطلوبة
             </legend>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
               {SERVICE_CATEGORIES.map((service) => {
                 const Icon = SERVICE_ICONS[service.id];
                 const active = selectedService === service.id;
@@ -334,18 +344,18 @@ export function ServiceRequestForm({
                     type="button"
                     onClick={() => onChangeService(service.id)}
                     aria-pressed={active}
-                    className={`flex flex-col items-center justify-center gap-2 min-h-[84px] rounded-xl border px-3 py-4 text-center transition-all cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#C89D3C] ${
+                    className={`flex flex-col items-center justify-center gap-2 min-h-[88px] rounded-xl border px-3 py-3.5 text-center transition-all cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#C89D3C] ${
                       active
                         ? 'border-[#C89D3C] bg-[#0B0B0C] text-white'
                         : 'border-neutral-200 bg-[#FAFAFA] text-[#0B0B0C] hover:border-neutral-300 hover:bg-white'
                     }`}
                   >
                     <Icon
-                      className={`w-6 h-6 ${
+                      className={`w-6 h-6 shrink-0 ${
                         active ? 'text-[#D6B05A]' : 'text-[#9A7420]'
                       }`}
                     />
-                    <span className="font-display text-base font-bold">
+                    <span className="font-display text-sm sm:text-base font-bold leading-snug">
                       {service.title}
                     </span>
                   </button>

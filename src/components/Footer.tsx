@@ -11,7 +11,7 @@ export function Footer({ onOpenAdmin }: FooterProps) {
             AL MANSOUR SERVICES – خدمات المنصور
           </p>
           <p className="text-xs text-neutral-400">
-            صيانة كهرباء، سباكة، نقاشة، وتكييف · برج العرب – الإسكندرية فقط
+            كهرباء، سباكة، نقاشة، تكييف، بناء، سيراميك، رخام، محارة، وجبس · برج العرب – الإسكندرية فقط
           </p>
         </div>
 

@@ -33,6 +33,7 @@ import {
   updateTechnician,
 } from '../services/maintenanceService';
 import {
+  SERVICE_CATEGORIES,
   SERVICE_LABELS,
   SPECIALTY_LABELS,
   STATUS_META,
@@ -439,10 +440,11 @@ export function AdminDashboard({ user }: AdminDashboardProps) {
                   className="w-full min-h-[44px] rounded-xl border border-neutral-300 bg-[#FAFAFA] px-3 py-2 text-sm text-[#0B0B0C] focus:border-[#C89D3C] focus:outline-none"
                 >
                   <option value="all">جميع الأقسام</option>
-                  <option value="electrical">كهرباء</option>
-                  <option value="plumbing">سباكة</option>
-                  <option value="painting">نقاشة</option>
-                  <option value="hvac">تكييف</option>
+                  {SERVICE_CATEGORIES.map((service) => (
+                    <option key={service.id} value={service.id}>
+                      {service.title}
+                    </option>
+                  ))}
                 </select>
               </div>
 
@@ -705,10 +707,11 @@ export function AdminDashboard({ user }: AdminDashboardProps) {
                 }
                 className="w-full min-h-[44px] rounded-xl border border-neutral-300 bg-[#FAFAFA] px-3.5 py-2 text-sm focus:border-[#C89D3C] focus:bg-white focus:outline-none"
               >
-                <option value="electrical">كهرباء</option>
-                <option value="plumbing">سباكة</option>
-                <option value="painting">نقاشة</option>
-                <option value="hvac">تكييف</option>
+                {SERVICE_CATEGORIES.map((service) => (
+                  <option key={service.id} value={service.id}>
+                    {service.title}
+                  </option>
+                ))}
                 <option value="general">صيانة عامة</option>
               </select>
             </div>
