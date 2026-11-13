@@ -18,7 +18,11 @@ import {
   Trash2,
   Zap,
 } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
+import {
+  compressProblemPhoto,
+  type CompressedProblemPhoto,
+} from '../lib/imageCompression';
 import { submitServiceRequest } from '../services/maintenanceService';
 import {
   BORG_EL_ARAB_DISTRICTS,
@@ -34,8 +38,7 @@ interface ServiceRequestFormProps {
 
 interface AttachedPhoto {
   id: string;
-  file: File;
-  previewUrl: string;
+  compressed: CompressedProblemPhoto;
 }
 
 const SERVICE_ICONS: Record<ServiceType, typeof Zap> = {
@@ -65,6 +68,8 @@ export function ServiceRequestForm({
   const [locationError, setLocationError] = useState<string | null>(null);
 
   const [photos, setPhotos] = useState<AttachedPhoto[]>([]);
+  const [processingPhotos, setProcessingPhotos] = useState(false);
+  const [photoError, setPhotoError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const [submitting, setSubmitting] = useState(false);
@@ -78,49 +83,66 @@ export function ServiceRequestForm({
     uploadedPhotoCount: number;
   } | null>(null);
 
-  useEffect(() => {
-    return () => {
-      photos.forEach((p) => URL.revokeObjectURL(p.previewUrl));
-    };
-  }, [photos]);
-
-  const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePhotoSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const fileList = e.target.files;
-    if (!fileList) return;
+    if (!fileList || fileList.length === 0) return;
+
+    const selectedFiles = Array.from(fileList);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
 
     setFormError(null);
+    setPhotoError(null);
+
     const remainingSlots = 4 - photos.length;
     if (remainingSlots <= 0) {
-      setFormError('الحد الأقصى للصور المرفقة هو 4 صور لكل طلب.');
+      setPhotoError('الحد الأقصى للصور المرفقة هو 4 صور لكل طلب.');
       return;
     }
 
-    const validFiles: AttachedPhoto[] = [];
-    for (let i = 0; i < Math.min(fileList.length, remainingSlots); i += 1) {
-      const file = fileList[i];
-      if (!file.type.startsWith('image/')) {
-        setFormError('يرجى اختيار ملفات صور صالحة فقط.');
-        continue;
-      }
-      validFiles.push({
-        id: `${Date.now()}_${i}_${Math.random().toString(36).slice(2, 6)}`,
-        file,
-        previewUrl: URL.createObjectURL(file),
-      });
-    }
+    setProcessingPhotos(true);
+    const processedBatch: AttachedPhoto[] = [];
+    const errors: string[] = [];
 
-    setPhotos((prev) => [...prev, ...validFiles]);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
+    try {
+      const filesToProcess = selectedFiles.slice(0, remainingSlots);
+      for (let i = 0; i < filesToProcess.length; i += 1) {
+        const file = filesToProcess[i];
+        try {
+          const compressed = await compressProblemPhoto(file, photos.length + processedBatch.length);
+          processedBatch.push({
+            id: `${Date.now()}_${i}_${Math.random().toString(36).slice(2, 6)}`,
+            compressed,
+          });
+        } catch (err) {
+          const msg =
+            err instanceof Error && err.message
+              ? err.message
+              : 'تعذر قراءة ملف الصورة المختار.';
+          errors.push(msg);
+        }
+      }
+
+      if (selectedFiles.length > remainingSlots) {
+        errors.push('تم إرفاق الحد الأقصى المسموح به (4 صور لكل طلب).');
+      }
+
+      if (processedBatch.length > 0) {
+        setPhotos((prev) => [...prev, ...processedBatch].slice(0, 4));
+      }
+
+      if (errors.length > 0) {
+        setPhotoError(errors[0]);
+      }
+    } finally {
+      setProcessingPhotos(false);
     }
   };
 
   const handleRemovePhoto = (id: string) => {
-    setPhotos((prev) => {
-      const target = prev.find((p) => p.id === id);
-      if (target) URL.revokeObjectURL(target.previewUrl);
-      return prev.filter((p) => p.id !== id);
-    });
+    setPhotoError(null);
+    setPhotos((prev) => prev.filter((p) => p.id !== id));
   };
 
   const handleCaptureLocation = () => {
@@ -184,10 +206,15 @@ export function ServiceRequestForm({
       return;
     }
 
+    if (processingPhotos) {
+      setFormError('يرجى الانتظار لحين انتهاء تجهيز الصور المختارة.');
+      return;
+    }
+
     setSubmitting(true);
     setUploadStatus(
       photos.length > 0
-        ? 'جاري تجهيز وضغط الصور...'
+        ? 'جاري حفظ الطلب ورفع الصور بشكل آمن...'
         : 'جاري إرسال الطلب...'
     );
 
@@ -201,12 +228,15 @@ export function ServiceRequestForm({
         locationLat,
         locationLng,
         locationUrl: locationUrl.trim() || undefined,
-        photos: photos.map((p) => p.file),
+        compressedPhotos: photos.map((p, idx) => ({
+          ...p.compressed,
+          index: idx,
+        })),
         onProgress: (status) => setUploadStatus(status),
       });
 
-      photos.forEach((p) => URL.revokeObjectURL(p.previewUrl));
       setPhotos([]);
+      setPhotoError(null);
       setDescription('');
       setAddress('');
       setPhone('');
@@ -226,7 +256,8 @@ export function ServiceRequestForm({
         rawMessage.includes('الصورة') ||
         rawMessage.includes('صور') ||
         rawMessage.includes('أبعاد') ||
-        rawMessage.includes('المتصفح');
+        rawMessage.includes('المتصفح') ||
+        rawMessage.includes('صيغة');
       setFormError(
         isCompressionMsg
           ? rawMessage
@@ -403,7 +434,7 @@ export function ServiceRequestForm({
             <input
               ref={fileInputRef}
               type="file"
-              accept="image/*"
+              accept="image/jpeg,image/png,image/webp,image/*"
               multiple
               onChange={handlePhotoSelect}
               className="hidden"
@@ -417,7 +448,7 @@ export function ServiceRequestForm({
                   className="relative aspect-square overflow-hidden rounded-xl border border-neutral-200 bg-neutral-100"
                 >
                   <img
-                    src={photo.previewUrl}
+                    src={photo.compressed.dataUrl}
                     alt="صورة العطل المرفقة"
                     className="h-full w-full object-cover"
                   />
@@ -435,15 +466,38 @@ export function ServiceRequestForm({
               {photos.length < 4 && (
                 <label
                   htmlFor="problem-photos-input"
-                  className="flex aspect-square flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-neutral-300 bg-[#FAFAFA] p-3 text-center text-neutral-600 hover:border-[#C89D3C] hover:bg-[#FBF7EE]/60 hover:text-[#0B0B0C] transition-colors cursor-pointer"
+                  className={`flex aspect-square flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-neutral-300 bg-[#FAFAFA] p-3 text-center text-neutral-600 hover:border-[#C89D3C] hover:bg-[#FBF7EE]/60 hover:text-[#0B0B0C] transition-colors cursor-pointer ${
+                    processingPhotos ? 'pointer-events-none opacity-60' : ''
+                  }`}
                 >
-                  <Camera className="w-6 h-6 text-[#9A7420]" />
-                  <span className="text-xs font-semibold">
-                    تصوير أو اختيار صورة
-                  </span>
+                  {processingPhotos ? (
+                    <>
+                      <Loader2 className="w-6 h-6 animate-spin text-[#9A7420]" />
+                      <span className="text-xs font-semibold">
+                        جاري قراءة وضغط الصورة...
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <Camera className="w-6 h-6 text-[#9A7420]" />
+                      <span className="text-xs font-semibold">
+                        تصوير أو اختيار صورة
+                      </span>
+                    </>
+                  )}
                 </label>
               )}
             </div>
+
+            {photoError && (
+              <div
+                role="alert"
+                className="flex items-start gap-2.5 rounded-xl border border-red-200 bg-red-50 p-3 text-xs sm:text-sm text-red-800"
+              >
+                <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-red-600" />
+                <span>{photoError}</span>
+              </div>
+            )}
 
             {photos.length > 0 && (
               <div
@@ -452,8 +506,8 @@ export function ServiceRequestForm({
               >
                 <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5 text-[#9A7420]" />
                 <span>
-                  سيتم ضغط الصور تلقائياً وحفظها بسرية مع الطلب لتظهر لمدير
-                  الشركة فقط عند إرسال الطلب.
+                  تم تجهيز وضغط الصور بنجاح وستُحفظ بسرية مع الطلب لتظهر لمدير
+                  الشركة فقط عند الإرسال.
                 </span>
               </div>
             )}

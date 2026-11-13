@@ -41,6 +41,7 @@ export interface CreateServiceRequestInput {
   locationLng?: number;
   locationUrl?: string;
   photos?: File[];
+  compressedPhotos?: CompressedProblemPhoto[];
   onProgress?: (statusText: string) => void;
 }
 
@@ -79,15 +80,22 @@ export async function submitServiceRequest(
 ): Promise<CreateServiceRequestResult> {
   const requestId = generateRequestId();
   const requestCode = generateRequestCode();
-  const rawPhotos = (input.photos || []).slice(0, 4);
 
-  const compressedPhotos: CompressedProblemPhoto[] = [];
-  for (let i = 0; i < rawPhotos.length; i += 1) {
-    input.onProgress?.(
-      `جاري ضغط وتجهيز الصورة ${i + 1} من ${rawPhotos.length}...`
-    );
-    const compressed = await compressProblemPhoto(rawPhotos[i], i);
-    compressedPhotos.push(compressed);
+  let compressedPhotos: CompressedProblemPhoto[] = [];
+  if (input.compressedPhotos && input.compressedPhotos.length > 0) {
+    compressedPhotos = input.compressedPhotos.slice(0, 4).map((photo, idx) => ({
+      ...photo,
+      index: idx,
+    }));
+  } else {
+    const rawPhotos = (input.photos || []).slice(0, 4);
+    for (let i = 0; i < rawPhotos.length; i += 1) {
+      input.onProgress?.(
+        `جاري ضغط وتجهيز الصورة ${i + 1} من ${rawPhotos.length}...`
+      );
+      const compressed = await compressProblemPhoto(rawPhotos[i], i);
+      compressedPhotos.push(compressed);
+    }
   }
 
   input.onProgress?.(
