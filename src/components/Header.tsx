@@ -1,5 +1,6 @@
 import { Menu, X } from 'lucide-react';
 import { useState } from 'react';
+import { PWAInstallButton } from './PWAControls';
 
 interface HeaderProps {
   view: 'client' | 'admin';
@@ -65,8 +66,11 @@ export function Header({ view, onNavigateView }: HeaderProps) {
           </button>
         </nav>
 
-        {/* Zone 3: Single Primary Action + Mobile Menu Trigger */}
+        {/* Zone 3: Single Primary Action + PWA Install + Mobile Menu Trigger */}
         <div className="flex items-center gap-2 shrink-0">
+          <div className="hidden sm:flex">
+            <PWAInstallButton />
+          </div>
           {view === 'client' ? (
             <button
               type="button"
@@ -128,6 +132,7 @@ export function Header({ view, onNavigateView }: HeaderProps) {
           >
             لوحة تحكم الإدارة
           </button>
+          <PWAInstallButton compact />
         </div>
       )}
     </header>

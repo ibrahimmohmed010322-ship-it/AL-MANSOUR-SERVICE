@@ -5,6 +5,7 @@ import { AdminDashboard } from './components/AdminDashboard';
 import { ClientLanding } from './components/ClientLanding';
 import { Footer } from './components/Footer';
 import { Header } from './components/Header';
+import { OfflineIndicator } from './components/PWAControls';
 import { ServiceRequestForm } from './components/ServiceRequestForm';
 import { auth } from './lib/firebase';
 import { verifyAdminAccess } from './services/maintenanceService';
@@ -130,6 +131,7 @@ export default function App() {
       </main>
 
       <Footer onOpenAdmin={() => handleNavigateView('admin')} />
+      <OfflineIndicator />
     </div>
   );
 }
